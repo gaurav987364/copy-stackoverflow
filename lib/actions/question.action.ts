@@ -7,6 +7,7 @@ import User from "@/database/user.model";
 import { revalidatePath } from "next/cache";
 import { connectToDatabse } from "../mongoose";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getQuestions(params: GetQuestionsParams) {
   try {
     connectToDatabse()
