@@ -53,6 +53,7 @@ export async function POST(req: Request) {
   // Do something with the payload
   // For this guide, you simply log the payload to the console
   const eventType = evt.type
+  // console.log(eventType)
 
   // chnages occurs here or we handel the event like what is happen
   // create a new user
