@@ -26,7 +26,7 @@ export async function createUser(userData : CreateUserParams){
     try {
         connectToDatabse()
         const newUser = await User.create(userData);
-        return newUser;
+        return JSON.parse(JSON.stringify(newUser));
     } catch (error) {
         console.log(error); 
     }

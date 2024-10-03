@@ -86,6 +86,8 @@ export async function POST(req: Request) {
         },
         path: `/profile/${id}`
     })
+    console.log(mongoUser);
+    
     return NextResponse.json({message: 'OK', user:mongoUser})
   }
 
