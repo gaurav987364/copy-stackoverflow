@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server'
 export async function POST(req: Request) {
   // You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
   // Todo: Add webhook secret to env.local after deploy we get the url which put in the clerk add endpoint
-  const WEBHOOK_SECRET = process.env.NEXT_CLERK_WEBHOOK_SECRET
+  const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET
 
   if (!WEBHOOK_SECRET) {
     throw new Error('Please add WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local')
