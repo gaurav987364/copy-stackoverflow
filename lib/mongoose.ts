@@ -16,8 +16,6 @@ export const connectToDatabse = async ()=>{
     try {
         await mongoose.connect(process.env.MONGODB_URL, {
             dbName: "techflow",
-            bufferCommands:false,
-            connectTimeoutMS:30000,
         })
         isConnected = true;
         console.log('Connected to database');
