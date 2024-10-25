@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useRef, useState } from "react";
 import { z } from "zod";
@@ -18,31 +19,38 @@ import { QuestionsSchema } from "@/lib/validation";
 import { Editor } from "@tinymce/tinymce-react";
 import { Badge } from "../ui/badge";
 import Image from "next/image";
-import { createQuestion } from "@/lib/actions/question.action";
+import { createQuestion, editQuestion } from "@/lib/actions/question.action";
 import { usePathname, useRouter } from "next/navigation";
+import { useTheme } from "@/context/ThemeProvider";
 
 interface Props {
     mongoUserId: string;
+    type?: string;
+    questionDetails?: string;
 }
 // we do mode validation file into the validation.ts
 
 // we declare type of buuton
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const type : any  = 'create';
-const Question = ({mongoUserId} : Props) => {
+// const type : any  = 'create';
+const Question = ({mongoUserId, type, questionDetails} : Props) => {
+  const {mode} = useTheme();
   const editorRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false); // prevent double submission when button is clicked to prevent error in database
   const router = useRouter();
   const pathname = usePathname();
+  const parsedQuestionDetails = questionDetails && JSON.parse(questionDetails || "");
+  console.log(parsedQuestionDetails);
   
-
+  // tricky to render tag below form kyuki vo field me nahi show krne
+  const allTags = parsedQuestionDetails?.tags?.map((tag : any)=> tag.name)
   // 1. Define your form.
   const form = useForm<z.infer<typeof QuestionsSchema>>({
     resolver: zodResolver(QuestionsSchema),
     defaultValues: {
-      title: "",
-      explanation: "",
-      tags: [],
+      title: parsedQuestionDetails?.title || "",
+      explanation: parsedQuestionDetails?.content || "",
+      tags: allTags || [],
     },
   });
 
@@ -50,18 +58,27 @@ const Question = ({mongoUserId} : Props) => {
   async function onSubmit(values: z.infer<typeof QuestionsSchema>) {
     setIsSubmitting(true);
     try {
-      // make an async call to api => to create a question
-      await createQuestion({
-        title: values.title,
-        content: values.explanation,
-        tags: values.tags,
-        author: JSON.parse(mongoUserId),
-        path: pathname
-        // other fields
-      })
-      // contain all data
-      // navigate to home
-      router.push("/");
+      if(type === 'edit'){
+        await editQuestion({
+          title: values.title,
+          content: values.explanation,
+          questionId: parsedQuestionDetails._id,
+          path: pathname
+        })
+        router.push(`/question/${parsedQuestionDetails._id}`)
+      } else {
+        await createQuestion({
+          title: values.title,
+          content: values.explanation,
+          tags: values.tags,
+          author: JSON.parse(mongoUserId),
+          path: pathname
+        })
+        // make an async call to api => to create a question
+        // contain all data
+        // navigate to home
+        router.push("/");
+      }
     } catch (error) {
       console.log(error);
     } finally {
@@ -146,7 +163,7 @@ const Question = ({mongoUserId} : Props) => {
             <FormLabel className=' paragraph-semibold text-dark400_light800'>Detailed Explanation of you problem. <span className=' text-red-600'>*</span></FormLabel>
             <FormControl className=' mt-3.5'>
             <Editor
-            apiKey='8ku5kh2k78tuo3w23zcl1lj4qwxs5apxo7yo4zhn8s0xg2g6'
+            apiKey='rci8b0c4khlnkdj8iiffct6e7wz7w78811aqrz86fvm6s0l7'
             onInit={(evt, editor) => {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-expect-error
@@ -168,10 +185,12 @@ const Question = ({mongoUserId} : Props) => {
                     toolbar: 'bold italic underline | codesample | undo redo | forecolor | alignright alignleft alignjustify ',
                     menubar: true
                 },
+                skin: mode === 'dark' ? 'oxide-dark' : 'oxide',
+                content_css: mode === 'dark' ? 'dark' : "light",
             }}
             onBlur={field.onBlur}
             onEditorChange={(content)=> field.onChange(content)}
-            initialValue=""
+            initialValue={parsedQuestionDetails?.content || ""}
             />
             </FormControl>
             <FormDescription className=' body-regular mt-2.5 text-light-500'>
@@ -195,6 +214,7 @@ const Question = ({mongoUserId} : Props) => {
                   <Input
                     className="no-focus paragraph-regular background-light900_dark300 light-border-2 text-dark300_light700 min-h-[56px] border"
                     placeholder="Add tags..."
+                    disabled={type === 'edit'}
                     onKeyDown={(e) => handleInputKeyDown(e, field)}
                   />
 
@@ -206,14 +226,16 @@ const Question = ({mongoUserId} : Props) => {
                           className="subtle-medium background-light800_dark300 text-light400_light500 flex items-center justify-center gap-2 rounded-md border-none px-4 py-2 capitalize"
                         >
                           #{tag}
-                          <Image
-                            src="/assets/icons/close.svg"
-                            alt="Close icon"
-                            width={14}
-                            height={14}
-                            className="cursor-pointer object-contain invert-0 dark:invert"
-                            onClick={() => handleRemoveTag(tag, field)}
-                          />
+                          {type === 'create' && (
+                            <Image
+                              src="/assets/icons/close.svg"
+                              alt="Close icon"
+                              width={14}
+                              height={14}
+                              className="cursor-pointer object-contain invert-0 dark:invert"
+                              onClick={() => handleRemoveTag(tag, field)}
+                            />
+                          )}
                         </Badge>
                       ))}
                     </div>

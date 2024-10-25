@@ -3,62 +3,22 @@ import HomeFilters from '@/components/home/HomeFilters'
 import Filters from '@/components/shared/Filters'
 import LocalSearchBar from '@/components/shared/navbar/search/LocalSearchBar'
 import NoResult from '@/components/shared/NoResult'
+import Pagination from '@/components/shared/Pagination'
 import { Button } from '@/components/ui/button'
 import { HomePageFilters } from '@/constants/filters'
 import { getQuestions } from '@/lib/actions/question.action'
+import { SearchParamsProps } from '@/types'
 import Link from 'next/link'
 import React from 'react'
 
-// const questions = [
-//   {
-//     _id:"1",
-//     title: 'cascading delete in sql.', 
-//     tags:[{_id:"1", name:'python'}, {_id:"2", name: 'sql'}],
-//     author: {
-//       _id:"1",
-//       name: 'john doe',
-//       picture: '/images/avatars/avatar1.jpg'
-//     },
-//     createdAt: new Date('2023-01-01T12:00:00Z'),
-//     upvotes: 1000000,
-//     views: 10000000,
-//     answer: []
-//   },
 
-//   {
-//     _id:"2",
-//     title: 'how to implement a custom validation in a form in react?', 
-//     tags:[{_id:"2", name:'react'}, {_id:"3", name: 'javascript'}],
-//     author: {
-//       _id:"2",
-//       name: 'jane doe',
-//       picture: '/images/avatars/avatar2.jpg'
-//     },
-//     createdAt: new Date('2023-01-02T12:00:00Z'),
-//     upvotes: 5,
-//     views: 50,
-//     answer: []
-//   },
-
-//   {
-//     _id:"3",
-//     title: 'how to create a responsive web page using html and css?', 
-//     tags:[{_id:"3", name:'html'}, {_id:"4", name: 'css'}],
-//     author: {
-//       _id:"3",
-//       name: 'bill doe',
-//       picture: '/images/avatars/avatar3.jpg'
-//     },
-//     createdAt: new Date('2023-01-03T12:00:00Z'),
-//     upvotes: 8,
-//     views: 80,
-//     answer: []
-//   },
-// ]
-const Home = async () => {
-  const questionsData = await getQuestions({}) 
+const Home = async ({searchParams} : SearchParamsProps) => {
+  const questionsData = await getQuestions({
+    searchQuery: searchParams.q,
+    filter: searchParams.filter,
+    page: searchParams.page ? +searchParams.page : 1,
+  }) 
   const questions = questionsData?.questions || []
-  console.log(questions);
   
   return (
     <>
@@ -72,9 +32,18 @@ const Home = async () => {
         </Link> 
       </div> 
       <div className=' mt-11 flex justify-between gap-5     max-sm:flex-col sm:items-center'>
-        <LocalSearchBar route='/' iconPosition='left' imgSrc='/assets/icons/search.svg' placeholder='Search for question' otherClasses='flex-1'/>
+        <LocalSearchBar 
+          route='/' 
+          iconPosition='left' 
+          imgSrc='/assets/icons/search.svg' 
+          placeholder='Search for question' 
+          otherClasses='flex-1'
+        />
 
-        <Filters filters={HomePageFilters} otherClasses='min-h-[56px] sm:min-w-[170px]' containerClasses="hidden max-md:flex"/>
+        <Filters 
+          filters={HomePageFilters} 
+          otherClasses='min-h-[56px] sm:min-w-[170px]' containerClasses="hidden max-md:flex"
+        />
       </div>
 
       <HomeFilters/>
@@ -90,7 +59,7 @@ const Home = async () => {
             createdAt={question.createdAt}
             views={question.views}
             upvotes={question.upvotes}
-            answers={question.answer}
+            answers={question?.answers}
           />
         )) : <NoResult 
                     title="There is no questions to show"
@@ -98,6 +67,13 @@ const Home = async () => {
                     link="/ask-question"
                     linkTitle='Ask a Question'
               />}
+      </div>
+
+      <div className=' mt-10'>
+       <Pagination
+        pageNumber={searchParams?.page ? +searchParams.page : 1}
+        isNext={questionsData?.isNext}
+       />
       </div>
     </>
   )

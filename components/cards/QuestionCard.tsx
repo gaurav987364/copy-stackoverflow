@@ -3,15 +3,20 @@ import React from 'react'
 import RenderTag from '../shared/RenderTag';
 import Metric from '../shared/Metric';
 import { formatAndDivideNumber, getTimestamp } from '@/lib/utils';
+import { SignedIn } from '@clerk/nextjs';
+import EditDeleteButton from '../shared/EditDeleteButton';
 interface Props {
     _id: string;
     title: string;
-    author: {_id:string, name: string, picture:string};
+    author: {
+      [x: string]: string;_id:string, name: string, picture:string
+};
     views: number;
     createdAt: Date;
     tags: {_id :string, name:string}[];
     answers: Array<object>;
-    upvotes: number;
+    upvotes: string[];
+    clerkId?: string;
 }
 
 const QuestionCard = ({
@@ -23,7 +28,10 @@ const QuestionCard = ({
     tags,
     answers,
     upvotes,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    clerkId
 } : Props) => {
+  const showActionButton = clerkId && clerkId === author.clerkId;
   return (
     <div className=' card-wrapper rounded-[10px] p-9 sm:px-11'>
         <div className=' flex flex-col-reverse items-start justify-between gap-5 sm:flex-row'>
@@ -37,20 +45,29 @@ const QuestionCard = ({
                   </h3>
                 </Link>
             </div>
+
+            <SignedIn>
+              {showActionButton && (
+                <EditDeleteButton
+                 type="Question"
+                 itemId={JSON.stringify(_id)}
+                />
+              )}
+            </SignedIn>
         </div>
 
         <div className=' mt-3.5 flex flex-wrap gap-2'>
             {tags.map(tag => (
                 <RenderTag key={tag._id} _id={tag._id} name={tag.name}/>
             ))}
-        </div>?
+        </div>
 
         <div className=' flex-between mt-6 w-full flex-wrap gap-3'>
             <Metric
               imgUrl={author?.picture}
               alt="author"
               value={author?.name}
-              title={` -asked ${getTimestamp(createdAt)}`}
+              title={`  --asked ${getTimestamp(createdAt)}`}
               href={`/profile/${author?._id}`}
               isAuthor
               textStyles=" body-medium  text-dark400_light700"
@@ -58,14 +75,14 @@ const QuestionCard = ({
             <Metric
               imgUrl='/assets/icons/like.svg'
               alt="Upvotes"
-              value={formatAndDivideNumber(upvotes)}
+              value={formatAndDivideNumber(upvotes?.length)}
               title="Votes"
               textStyles=" small-medium text-dark400_light800"
             />
             <Metric
               imgUrl='/assets/icons/message.svg'
               alt="answer"
-              value={answers?.length}
+              value={formatAndDivideNumber(answers?.length)}
               title="Answer"
               textStyles=" small-medium text-dark400_light800"
             />

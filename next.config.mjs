@@ -6,7 +6,18 @@ const nextConfig = {
         serverComponentsExternalPackages: ['mongoose'], 
     },
     images: {
-        domains: ['images.pexels.com'], // Add allowed external domains here
+         // Add allowed external domains here
+         remotePatterns:[
+           {
+            protocol : 'https',
+            hostname: '*',
+           },
+           {
+            protocol : 'http',
+            hostname: '*',
+           },
+
+         ]
     },
 };
 

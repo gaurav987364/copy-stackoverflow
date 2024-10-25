@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-
+import qs from 'query-string';
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -64,4 +65,48 @@ export const getJoinedDate = (date: Date): string => {
   const joinedDate = `${month} ${year}`;
 
   return joinedDate;
+}
+
+interface URLParams {
+  params : string;
+  key : string;
+  value : string | null;
+}
+// ye function hamare currnet url ko lega or usme dekhega kya kya hai or un sabko nahi change krega sirf key means 'q' ko bs modify krega
+
+export async function formUrlQuery({ params, key, value }: URLParams): Promise<string> {
+  const currentURL = qs.parse(params);
+
+  // Ensure currentURL is an object and key is set correctly
+  if (typeof currentURL === 'object') {
+    currentURL[key] = value;
+  }
+
+  return qs.stringifyUrl({
+    url: window.location.pathname,
+    query: currentURL as Record<string, any>,
+  }, { skipNull: true });
+}
+
+
+
+interface RemoveUrlKeyProps {
+  params: string;
+  keys: string[];
+}
+
+export async function removeKeysFromUrl({ params, keys }: RemoveUrlKeyProps): Promise<string> {
+  const currentURL = qs.parse(params);
+
+  // Ensure keys exist before deleting them
+  keys.forEach((key) => {
+    if (key in currentURL) {
+      delete currentURL[key];
+    }
+  });
+
+  return qs.stringifyUrl({
+    url: window.location.pathname,
+    query: currentURL as Record<string, any>,
+  }, { skipNull: true });
 }
