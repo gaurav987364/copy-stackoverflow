@@ -1,4 +1,5 @@
 "use client"
+import { toast } from '@/hooks/use-toast';
 import { downvotesAnswer, upvotesAnswer } from '@/lib/actions/answer.action';
 import { viewQuestion } from '@/lib/actions/interaction.action';
 import { downvotesQuestion, upvotesQuestion } from '@/lib/actions/question.action';
@@ -36,11 +37,19 @@ const Vote = ({
         questionId: JSON.parse(itemId),
         path: pathname,
       })
+
+      return toast({
+        title: `Question ${!hasSaved ? "Saved in" : "Removed from"} to your collections! `,
+        variant: !hasSaved ? 'default' : "destructive"
+      })
     }
     
     const handleVote = async (action: string) => {
         if(!userId) {
-          return;
+          return toast({
+            title:"Please Log in !",
+            description: "You need to log in to perform this action.",
+          })
         }
     
         if(action === 'upvote') {
@@ -63,7 +72,10 @@ const Vote = ({
           }
     
           // todo: show a toast
-          return;
+          return toast({
+            title: `Upvote ${!hasupVoted ? "Successfully" : "Removed"} `,
+            variant: !hasupVoted ? 'default' : "destructive"
+          })
         }
     
         if(action === 'downvote') {
@@ -86,6 +98,10 @@ const Vote = ({
           }
     
           // todo: show a toast
+          return toast({
+            title: `Downvote ${!hasdownVoted? "Successfully" : "Removed"} `,
+            variant:!hasdownVoted? 'default' : "destructive"
+          })
           
         }
     }
@@ -98,6 +114,7 @@ const Vote = ({
         userId: userId ? JSON.parse(userId) : undefined,
       })
     },[itemId, userId, router, pathname])
+
   return (
     <div className=' flex gap-5'>
         <div className=' flex-center gap-2.5'> 
@@ -142,18 +159,18 @@ const Vote = ({
 
 
         {type === 'Question' && (
-        <Image 
-          src={hasSaved
-            ? '/assets/icons/star-filled.svg'
-            : '/assets/icons/star-red.svg'
-          }
-          width={18}
-          height={18}
-          alt="star"
-          className="cursor-pointer"
-          onClick={handleSave}
-        />
-      )}
+            <Image 
+              src={hasSaved
+                ? '/assets/icons/star-filled.svg'
+                : '/assets/icons/star-red.svg'
+              }
+              width={18}
+              height={18}
+              alt="star"
+              className="cursor-pointer"
+              onClick={handleSave}
+            />
+        )}
     </div>
   )
 }

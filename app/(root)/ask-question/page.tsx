@@ -3,6 +3,11 @@ import { getUserById } from '@/lib/actions/user.action';
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import React from 'react';
+import type { Metadata } from 'next'; 
+export const metadata : Metadata = {
+  title: 'Ask a Question | TechOverflow.in',
+  description: 'Discover and share knowledge, ask questions, and connect with fellow developers.'
+}
 
 const AskQuestion = async () => {
   // getting user id of clerk

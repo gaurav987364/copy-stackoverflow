@@ -3,10 +3,18 @@ import QuestionCard from '@/components/cards/QuestionCard'
 import Filters from '@/components/shared/Filters'
 import LocalSearchBar from '@/components/shared/navbar/search/LocalSearchBar'
 import NoResult from '@/components/shared/NoResult'
+import Pagination from '@/components/shared/Pagination'
 import { QuestionFilters } from '@/constants/filters'
 import { getSavedQuestion } from '@/lib/actions/user.action'
 import { SearchParamsProps } from '@/types'
 import { auth } from '@clerk/nextjs/server'
+// import Loading from './loading'
+import type { Metadata } from 'next'; 
+export const metadata : Metadata = {
+  title: 'Collections | TechOverflow.in',
+  description: 'You can save your favourites question to your collections. And Revise later on.'
+}
+
 
 const Collection = async ({searchParams}: SearchParamsProps) => {
     const {userId} = auth();
@@ -15,10 +23,15 @@ const Collection = async ({searchParams}: SearchParamsProps) => {
     clerkId: userId,
     searchQuery: searchParams.q,
     filter:searchParams.filter,
+    page: searchParams.page? +searchParams.page : 1,
   });
   const questions = questionsData?.Question || []
   
+
+  // const isLoading = true;
+  // if(isLoading) return <Loading/>
   return (
+    <>
     <div>
       <h1 className="h1-bold text-dark100_light900">Saved Questions</h1>
       <div className=' mt-11 flex justify-between gap-5     max-sm:flex-col sm:items-center'>
@@ -56,7 +69,14 @@ const Collection = async ({searchParams}: SearchParamsProps) => {
                     linkTitle='Ask a Question'
               />}
       </div>
+      <div className=' mt-10'>
+        <Pagination
+          pageNumber={searchParams?.page? +searchParams.page : 1}
+          isNext={questionsData?.isNext}
+        />
+      </div>
     </div>
+    </>
   )
 }
 

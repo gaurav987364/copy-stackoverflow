@@ -97,13 +97,19 @@ export async function createQuestion(params: CreateQuestionParams) {
     });
 
     // Create an interaction record for the user's ask_question action
+    await Interaction.create({
+      user: author,
+      action: 'ask_question',
+      question: question._id,
+      tag: tagDocuments
+    })
     
     // Increment author's reputation by +5 for creating a question
+    await User.findByIdAndUpdate(author, { $inc: { reputation: 5 } })
 
     revalidatePath(path)
   } catch (error) {
     console.log(error);
-    
   }
 }
 
@@ -151,7 +157,15 @@ export async function upvotesQuestion(params:QuestionVoteParams){
     if(!question) {
       throw new Error('Question not found');
     }
-    // todo : increment the author reputation kyuki vo platform pe active hai 
+    // todo : increment the author reputation kyuki vo platform pe active hai based on upvote/downvote question
+    await User.findByIdAndUpdate(userId, {
+      $inc: { reputation: hasupVoted? -1 : 1 }
+    })
+
+    // increase reputation by +10/-10 for recieve and upvote and downvote for question
+    await User.findByIdAndUpdate(question.author, {
+      $inc: { reputation: hasupVoted? -10 : 10 }
+    })
 
     revalidatePath(path)
   } catch (error) {
@@ -188,6 +202,14 @@ export async function downvotesQuestion(params: QuestionVoteParams){
 
     // todo : decrement the author reputation kyuki vo platform pe active hai
 
+    await User.findByIdAndUpdate(userId,{
+      $inc: { reputation: hasdownVoted ? -2 : 2 }
+    })
+
+    // receve vote for question
+    await User.findByIdAndUpdate(question.author,{
+      $inc: { reputation: hasdownVoted ? -10 : 10 }
+    })
     revalidatePath(path)
   } catch (error) {
     console.log(error);

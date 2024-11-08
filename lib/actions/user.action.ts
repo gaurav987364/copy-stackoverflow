@@ -9,6 +9,8 @@ import { revalidatePath } from "next/cache";
 import Question from "@/database/question.model";
 import Tag from "@/database/tag.model";
 import Answer from '@/database/answer.model';
+import { BadgeCriteriaType } from '@/types';
+import { assignBadges } from '../utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getUserById(params: any){
@@ -81,7 +83,7 @@ export async function deleteUser(params : DeleteUserParams){
 export async function getAllUsers(params: GetAllUsersParams){
     try {
         connectToDatabse();
-        const {searchQuery, filter,page=1, pageSize=1} = params;
+        const {searchQuery, filter,page=1, pageSize=10} = params;
         const query : FilterQuery<typeof User> = {};
         if(searchQuery){
             query.$or = [
@@ -165,7 +167,7 @@ export async function addToCollection(params: ToggleSaveQuestionParams){
 export async function getSavedQuestion(params : GetSavedQuestionsParams){
     try {
         connectToDatabse();
-        const {clerkId, page=1, pageSize=10, filter, searchQuery} = params;
+        const {clerkId, page=1, pageSize=2, filter, searchQuery} = params;
 
         const query: FilterQuery<typeof Question> = searchQuery
         ? { title: { $regex: new RegExp(searchQuery, 'i') } }
@@ -191,7 +193,9 @@ export async function getSavedQuestion(params : GetSavedQuestionsParams){
         
             default:
                 break;
-        }
+        };
+
+        const skipAmount = (page - 1) * pageSize;
         const user = await User.findOne({clerkId})
         .populate({
             path: 'saved',
@@ -199,6 +203,8 @@ export async function getSavedQuestion(params : GetSavedQuestionsParams){
             options :{
                 // sort : {createdAt : -1},  // this is beofre filter
                 sort : sortOptions,
+                skip: skipAmount,
+                limit : pageSize + 1,
             },
             populate:[
                 {path : 'tags', model: Tag, select: " _id name"},
@@ -206,11 +212,12 @@ export async function getSavedQuestion(params : GetSavedQuestionsParams){
             ]
         })
 
+        const isNext = user.saved.length > pageSize;
         if(!user){
             throw new Error('User not found');
         }
         const savedQuestion = user.saved;
-        return { Question : savedQuestion}
+        return { Question : savedQuestion, isNext}
     } catch (error) {
         console.log(error);
         throw error;
@@ -231,7 +238,40 @@ export async function getUserInfo(params:GetUserByIdParams) {
         const totalQuestions = await Question.countDocuments({author : user._id});
         const totalAnswers = await Answer.countDocuments({author : user._id});
 
-        return { user, totalQuestions, totalAnswers };
+        // badge logic preecding
+        // total question upvotes
+        const [totalQuestionUpvotes] = await Question.aggregate([
+            { $match : { author : user._id }},
+            {$project : {
+                _id:0,
+                upvotes:{$size: "$upvotes"}
+            }},
+            { $group : { _id : null, totalUpvotes : { $sum : '$upvotes' }}}
+        ])
+        const [totalAnswerUpvotes] = await Answer.aggregate([
+            { $match : { author : user._id }},
+            {$project : {
+                _id:0,
+                upvotes:{$size: "$upvotes"}
+            }},
+            { $group : { _id : null, totalUpvotes : { $sum : '$upvotes' }}}
+        ])
+        const [questionViews] = await Answer.aggregate([
+            { $match : { author : user._id }},
+            { $group : { _id : null, totalViews : { $sum : '$views' }}}
+        ])
+
+        const criteria = [
+            { type: 'QUESTION_COUNT' as BadgeCriteriaType, count: totalQuestions },
+            { type: 'ANSWER_COUNT' as BadgeCriteriaType, count: totalAnswers },
+            { type: 'QUESTION_UPVOTES' as BadgeCriteriaType, count: totalQuestionUpvotes?.totalUpvotes || 0 },
+            { type: 'ANSWER_UPVOTES' as BadgeCriteriaType, count: totalAnswerUpvotes?.totalUpvotes || 0 },
+            { type: 'TOTAL_VIEWS' as BadgeCriteriaType, count: questionViews?.totalViews || 0 },
+          ]
+      
+          const badgeCounts = assignBadges({ criteria });
+      
+        return { user, totalQuestions, totalAnswers, badgeCounts,reputation:user.reputation };
     } catch (error) {
         console.log(error);
         throw error;
@@ -242,15 +282,22 @@ export async function getUserInfo(params:GetUserByIdParams) {
 export async function getUsersQuestion(params: GetUserStatsParams){
     try {
         connectToDatabse();
-        const { userId, page=1, pageSize=10} = params;
+        const { userId, page=1, pageSize=1} = params;
+
+        const skipAmount = (page - 1) * pageSize;
         // first get total questions information
         const totalQuestions = await Question.countDocuments({author : userId});
 
         // get fetch questions details based on view and upvotes
-        const userQuestions = await Question.find({author : userId}).sort({views: -1, upvotes: -1}).populate('tags', '_id name')
+        const userQuestions = await Question.find({author : userId})
+        .sort({createdAt : -1, views: -1, upvotes: -1})
+        .populate('tags', '_id name')
         .populate('author', '_id clerkId name picture')
+        .skip(skipAmount)
+        .limit(pageSize)
 
-        return { questions : userQuestions, totalQuestions };
+        const isNext = totalQuestions > skipAmount + userQuestions.length;
+        return { questions : userQuestions, totalQuestions, isNext };
 
     } catch (error) {
         console.log(error);
@@ -262,15 +309,20 @@ export async function getUsersQuestion(params: GetUserStatsParams){
 export async function getUsersAnswers(params: GetUserStatsParams){
     try {
         connectToDatabse();
-        const { userId, page=1, pageSize=10} = params;
+        const { userId, page=1, pageSize=2} = params;
+        const skipAmount = (page - 1) * pageSize;
         // first get total questions information
         const totalAnswers = await Answer.countDocuments({author : userId});
 
         // get fetch Answers details based on view and upvotes
-        const userAnswers = await Answer.find({author : userId}).sort({ upvotes: -1}).populate('question', '_id title')
+        const userAnswers = await Answer.find({author : userId}).sort({ upvotes: -1})
+        .populate('question', '_id title')
         .populate('author', '_id clerkId name picture')
+        .skip(skipAmount)
+        .limit(pageSize)
 
-        return { answers : userAnswers, totalAnswers };
+        const isNext = totalAnswers > skipAmount + userAnswers.length;
+        return { answers : userAnswers, totalAnswers, isNext };
 
     } catch (error) {
         console.log(error);

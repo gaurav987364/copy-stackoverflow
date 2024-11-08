@@ -2,15 +2,16 @@ import { getUsersQuestion } from '@/lib/actions/user.action'
 import React from 'react'
 import QuestionCard from '../cards/QuestionCard'
 import { SearchParamsProps } from '@/types';
+import Pagination from './Pagination';
 
 interface Props extends SearchParamsProps {
     userId: string;
     clerkId?: string | null;
 }
-const QuestionsTab = async ({ userId, clerkId }: Props) => {
+const QuestionsTab = async ({ userId, clerkId,searchParams }: Props) => {
     const result = await getUsersQuestion({
         userId,
-        page: 1,
+        page: searchParams?.page ? +searchParams.page : 1,
     })
   return (
     <>
@@ -28,6 +29,13 @@ const QuestionsTab = async ({ userId, clerkId }: Props) => {
         createdAt={question.createdAt}
       />
     ))}
+
+    <div className=' mt-8'>
+      <Pagination
+      pageNumber={searchParams?.page ? +searchParams.page : 1}
+      isNext={!!result.isNext}
+      />
+    </div>
   </>
   )
 }

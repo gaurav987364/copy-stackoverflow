@@ -10,7 +10,12 @@ import { getQuestions } from '@/lib/actions/question.action'
 import { SearchParamsProps } from '@/types'
 import Link from 'next/link'
 import React from 'react'
-
+// import Loading from './loading'
+import type { Metadata } from 'next'; 
+export const metadata : Metadata = {
+  title: 'Home | TechOverflow',
+  description: 'Discover and share knowledge, ask questions, and connect with fellow developers.'
+}
 
 const Home = async ({searchParams} : SearchParamsProps) => {
   const questionsData = await getQuestions({
@@ -20,6 +25,8 @@ const Home = async ({searchParams} : SearchParamsProps) => {
   }) 
   const questions = questionsData?.questions || []
   
+  // const isLoading = true;
+  // if(isLoading) return <Loading/>
   return (
     <>
     <div className="flex w-full flex-col-reverse justify-between gap-4 sm:flex-row sm:items-center">
@@ -70,10 +77,10 @@ const Home = async ({searchParams} : SearchParamsProps) => {
       </div>
 
       <div className=' mt-10'>
-       <Pagination
-        pageNumber={searchParams?.page ? +searchParams.page : 1}
-        isNext={questionsData?.isNext}
-       />
+        <Pagination
+            pageNumber={searchParams?.page ? +searchParams.page : 1}
+            isNext={questionsData?.isNext}
+        />
       </div>
     </>
   )

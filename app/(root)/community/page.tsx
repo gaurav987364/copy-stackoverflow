@@ -7,6 +7,12 @@ import { getAllUsers } from '@/lib/actions/user.action'
 import { SearchParamsProps } from '@/types'
 import Link from 'next/link'
 import React from 'react'
+// import Loading from './loading'
+import type { Metadata } from 'next'; 
+export const metadata : Metadata = {
+  title: 'Community | TechOverflow.in',
+  description: 'Join a community of developers where ideas meets innovations.'
+}
 
 const page = async ({searchParams}: SearchParamsProps) => {
     // Fetching user data from API
@@ -15,6 +21,9 @@ const page = async ({searchParams}: SearchParamsProps) => {
       filter: searchParams.filter,
       page: searchParams?.page ? +searchParams.page : 1
      });
+
+    //  const isLoading = true;
+    //  if(isLoading) return <Loading/>
   return (
     <>
     <h1 className="h1-bold text-dark100_light900">All Users</h1> 

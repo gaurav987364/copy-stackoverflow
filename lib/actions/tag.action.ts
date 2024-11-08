@@ -39,7 +39,7 @@ export async function getTopInteractedTags(params : GetTopInteractedTagsParams){
 export async function getAllTags(params: GetAllTagsParams) {
     try {
       connectToDatabse();
-       const {searchQuery, filter} = params;
+       const {searchQuery, filter, page=1, pageSize=4} = params;
        const query : FilterQuery<typeof Tag> = {};
        if(searchQuery){
             query.$or = [
@@ -65,9 +65,16 @@ export async function getAllTags(params: GetAllTagsParams) {
         default:
             break;
        }
+
+       const skipAmout = (page - 1) * pageSize;
       const tags = await Tag.find(query) // phle vahi {} tha
       .sort(sortoptions)
-      return { tags }
+      .skip(skipAmout)
+      .limit(pageSize)
+
+      const totalTags = await Tag.countDocuments(query);
+      const isNext = totalTags > skipAmout + tags.length;
+      return { tags , isNext}
     } catch (error) {
       console.log(error);
       throw error;
@@ -78,9 +85,10 @@ export async function getAllTags(params: GetAllTagsParams) {
 export async function getQuestionByTagId(params : GetQuestionsByTagIdParams){
     try {
         connectToDatabse();
-        const { tagId, page=1, searchQuery } = params;
+        const { tagId, page=1, pageSize=1, searchQuery } = params;
         const tagFilter: FilterQuery<ITag> = {_id : tagId}
 
+        const skipAmout = (page - 1) * pageSize;
         const tag = await Tag.findOne(tagFilter)
         .populate({
             path: 'questions',
@@ -90,6 +98,8 @@ export async function getQuestionByTagId(params : GetQuestionsByTagIdParams){
             {} ,
             options :{
                 sort : {createdAt : -1},
+                skip : skipAmout,
+                limit : pageSize + 1
             },
             populate:[
                 {path : 'tags', model: Tag, select: " _id name"},
@@ -97,11 +107,13 @@ export async function getQuestionByTagId(params : GetQuestionsByTagIdParams){
             ]
         })
 
+        const isNext = tag?.questions?.length > pageSize;
         if(!tag){
             throw new Error('Tag not found');
         }
+
         const questions = tag.questions;
-        return { tagTitle: tag.name, questions}
+        return { tagTitle: tag.name, questions, isNext}
     } catch (error) {
         console.log(error);
         throw error;

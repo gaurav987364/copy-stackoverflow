@@ -2,14 +2,20 @@
 import QuestionCard from '@/components/cards/QuestionCard'
 import LocalSearchBar from '@/components/shared/navbar/search/LocalSearchBar'
 import NoResult from '@/components/shared/NoResult'
+import Pagination from '@/components/shared/Pagination'
 import { getQuestionByTagId } from '@/lib/actions/tag.action'
 import { URLProps } from '@/types'
 import React from 'react'
+import type { Metadata } from 'next'; 
+export const metadata : Metadata = {
+  title: 'Tag Details | TechOverflow.in',
+  description: 'A tag details page of tech overflow.in.'
+}
 
 const Page = async ({params, searchParams} : URLProps) => {
     const result = await getQuestionByTagId({
         tagId: params.id,
-        page:1,
+        page:searchParams?.page ? +searchParams?.page : 1,
         searchQuery: searchParams.q
     })
     const questions = result.questions || [];
@@ -44,6 +50,13 @@ const Page = async ({params, searchParams} : URLProps) => {
                     link="/ask-question"
                     linkTitle='Ask a Question'
               />}
+      </div>
+
+      <div className=' mt-10'>
+       <Pagination
+        pageNumber={searchParams?.page? +searchParams.page : 1}
+        isNext={result?.isNext}
+       />
       </div>
     </div>
   )
