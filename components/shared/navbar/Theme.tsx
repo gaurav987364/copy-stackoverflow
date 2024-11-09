@@ -2,7 +2,6 @@
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
@@ -30,8 +29,8 @@ const Theme = () => {
         className="active-theme"
        />}
     </DropdownMenuTrigger>
-    <DropdownMenuContent className=" data-[state=open]: absolute -right-16 mt-3 min-w-[130px] rounded border bg-light-900 py-2 focus:bg-light-900 data-[state=open]:bg-dark-200 dark:border-dark-400 dark:bg-dark-300 dark:focus:bg-dark-200">
-      <DropdownMenuGroup>
+    <DropdownMenuContent className=" absolute -right-12 mt-3 min-w-[120px] cursor-pointer rounded border bg-light-900 py-2 focus:bg-light-800 dark:border-dark-400 dark:bg-dark-300 dark:focus:bg-dark-400">
+      <>
         {themes.map(theme => (
             <DropdownMenuItem key={theme.label} onClick={()=> {
                 setMode(theme.value)
@@ -51,7 +50,7 @@ const Theme = () => {
                 <span className={`${mode === theme.value ? 'text-primary-500' : 'text-dark100_light900'}`}>{theme.label}</span>
             </DropdownMenuItem>
         ))}
-      </DropdownMenuGroup>
+      </>
     </DropdownMenuContent>
   </DropdownMenu>
   )
