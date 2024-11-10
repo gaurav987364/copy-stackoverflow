@@ -163,7 +163,7 @@ const Question = ({mongoUserId, type, questionDetails} : Props) => {
             <FormLabel className=' paragraph-semibold text-dark400_light800'>Detailed Explanation of you problem. <span className=' text-red-600'>*</span></FormLabel>
             <FormControl className=' mt-3.5'>
             <Editor
-            apiKey='p2ewztfqt10bpw8ulz5lynkzikhjav9jw7dm1p1bia6kaf22'
+            apiKey='vq5wf4felowrin4v6l6225200fuhcm46l3qxuxpv5lyd4n5q'
             onInit={(evt, editor) => {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-expect-error
